@@ -12,6 +12,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@clerk/backend": "^3.23.0",
     "@fastify/cors": "^11.3.0",
     "@fastify/jwt": "^10.2.2",
     "@prisma/client": "^6.19.3",
