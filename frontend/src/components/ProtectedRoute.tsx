@@ -1,8 +1,17 @@
 import { useAuth } from "@clerk/clerk-react";
 import { Navigate, Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { usePagesStore } from "@/stores/pagesStore";
 
 export function ProtectedRoute() {
   const { isLoaded, isSignedIn } = useAuth();
+  const fetchPages = usePagesStore((state) => state.fetchPages);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      fetchPages();
+    }
+  }, [isSignedIn]);
 
   if (!isLoaded) {
     return (
@@ -12,11 +21,9 @@ export function ProtectedRoute() {
     );
   }
 
-  // Not signed in — redirect to login
   if (!isSignedIn) {
     return <Navigate to="/sign-in" replace />;
   }
 
-  // Signed in — render the child route
   return <Outlet />;
 }

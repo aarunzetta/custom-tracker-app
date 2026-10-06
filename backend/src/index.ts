@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import dotenv from "dotenv";
 import { userRoutes } from "./routes/users.js";
+import { pageRoutes } from "./routes/page.js";
 
 dotenv.config();
 
@@ -11,10 +12,9 @@ await app.register(cors, {
   origin: "http://localhost:5173",
 });
 
-// Routes
 await app.register(userRoutes);
+await app.register(pageRoutes);
 
-// Health check (no auth needed)
 app.get("/health", async () => {
   return { status: "ok", message: "Server is running" };
 });
