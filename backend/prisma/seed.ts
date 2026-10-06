@@ -16,6 +16,7 @@ async function main() {
   // Create a test user
   const user = await prisma.user.create({
     data: {
+      clerkId: "seed_user_placeholder",
       email: "test@example.com",
       name: "Test User",
     },

@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { clerkClient } from "../lib/clerk.js";
+import { verifyToken } from "@clerk/backend";
 
 export async function requireAuth(
   request: FastifyRequest,
@@ -17,13 +17,15 @@ export async function requireAuth(
 
     const token = authHeader.split(" ")[1];
 
-    // Ask Clerk to verify this token
-    const payload = await clerkClient.verifyToken(token);
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY!,
+    });
 
     (request as any).user = {
       clerkId: payload.sub,
     };
   } catch (error) {
+    console.error("Auth error:", error);
     return reply.status(401).send({
       error: "Unauthorized",
       message: "Invalid or expired token",
