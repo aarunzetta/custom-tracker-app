@@ -2,27 +2,41 @@ import { prisma } from "./prisma.js";
 import { clerkClient } from "./clerk.js";
 
 export async function syncUser(clerkId: string) {
-  // Check if user already exists in our database
+  // First try to find by clerkId
   let user = await prisma.user.findUnique({
     where: { clerkId },
   });
 
-  // fetch their info from Clerk and create them
-  if (!user) {
-    const clerkUser = await clerkClient.users.getUser(clerkId);
+  if (user) return user;
 
-    const email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
-    const name =
-      `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim();
+  // Not found by clerkId — fetch from Clerk
+  const clerkUser = await clerkClient.users.getUser(clerkId);
 
-    user = await prisma.user.create({
-      data: {
-        clerkId,
-        email,
-        name: name || null,
-      },
+  const email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
+  const firstName = clerkUser.firstName ?? "";
+  const lastName = clerkUser.lastName ?? "";
+  const name = `${firstName} ${lastName}`.trim() || null;
+
+  const existingByEmail = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existingByEmail) {
+    user = await prisma.user.update({
+      where: { email },
+      data: { clerkId, name },
     });
+    return user;
   }
+
+  // Brand new user — create them
+  user = await prisma.user.create({
+    data: {
+      clerkId,
+      email,
+      name,
+    },
+  });
 
   return user;
 }
