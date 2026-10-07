@@ -3,6 +3,7 @@ import { Plus, X, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { COLUMN_TYPES } from "@/config/columnTypes";
 import { type ColumnType, useColumnsStore } from "@/stores/columnsStore";
+import { useRowsStore } from "@/stores/rowsStore";
 
 type Step = "pick-type" | "configure";
 
@@ -11,6 +12,7 @@ type AddColumnPopoverProps = {
 };
 
 export function AddColumnPopover({ pageId }: AddColumnPopoverProps) {
+  const { fetchRows } = useRowsStore();
   const { createColumn } = useColumnsStore();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("pick-type");
@@ -91,6 +93,8 @@ export function AddColumnPopover({ pageId }: AddColumnPopoverProps) {
           options: { choices: choices.filter((c) => c.trim()) },
         }),
       });
+      // Refetch rows so existing rows show the new column's empty cell
+      await fetchRows(pageId);
       handleClose();
     } catch {
       setError("Failed to create column. Try again.");
@@ -121,7 +125,7 @@ export function AddColumnPopover({ pageId }: AddColumnPopoverProps) {
       {open && (
         <div
           className={cn(
-            "absolute left-0 bottom-full mb-2 z-100 w-72",
+            "absolute left-0 bottom-full mb-2 z-50 w-72",
             "bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden",
           )}
         >
