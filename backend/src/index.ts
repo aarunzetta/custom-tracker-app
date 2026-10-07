@@ -3,7 +3,8 @@ import cors from "@fastify/cors";
 import dotenv from "dotenv";
 import { userRoutes } from "./routes/users.js";
 import { pageRoutes } from "./routes/page.js";
-import { columnRoutes } from './routes/columns.js'
+import { columnRoutes } from "./routes/columns.js";
+import { rowRoutes } from "./routes/rows.js";
 
 dotenv.config();
 
@@ -17,8 +18,8 @@ await app.register(cors, {
 
 await app.register(userRoutes);
 await app.register(pageRoutes);
-await app.register(columnRoutes)
-
+await app.register(columnRoutes);
+await app.register(rowRoutes);
 
 app.get("/health", async () => {
   return { status: "ok", message: "Server is running" };
