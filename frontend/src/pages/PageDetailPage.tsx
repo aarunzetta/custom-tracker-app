@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Loader2, AlertCircle } from "lucide-react";
 import { usePage } from "@/hooks/usePage";
+import { useColumnsStore } from "@/stores/columnsStore";
 import { EditableTitle } from "@/components/page/EditableTitle";
 import { IconPicker } from "@/components/page/IconPicker";
 import { DataPanelToggle } from "@/components/page/DataPanelToggle";
@@ -11,9 +12,9 @@ import { PageEmptyState } from "@/components/page/PageEmptyState";
 export function PageDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { page, isLoading, error, updatePage } = usePage(id);
+  const { columns } = useColumnsStore();
   const [dataPanelOpen, setDataPanelOpen] = useState(false);
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -22,7 +23,6 @@ export function PageDetailPage() {
     );
   }
 
-  // Error state
   if (error || !page) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -39,7 +39,6 @@ export function PageDetailPage() {
       {/* Page header */}
       <div className="px-8 py-5 border-b border-gray-200 bg-white shrink-0">
         <div className="flex items-start justify-between gap-4">
-          {/* Icon + title */}
           <div className="flex items-center gap-3 min-w-0">
             <IconPicker
               value={page.icon}
@@ -50,8 +49,6 @@ export function PageDetailPage() {
               onChange={(name) => updatePage({ name })}
             />
           </div>
-
-          {/* Actions */}
           <div className="flex items-center gap-2 shrink-0 pt-1">
             <DataPanelToggle
               isOpen={dataPanelOpen}
@@ -61,17 +58,23 @@ export function PageDetailPage() {
         </div>
       </div>
 
-      {/* Main content area — scrollable */}
+      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Dashboard area — empty state for now */}
         <div className="flex-1 overflow-y-auto">
-          <PageEmptyState onOpenData={() => setDataPanelOpen(true)} />
+          {columns.length === 0 ? (
+            <PageEmptyState onOpenData={() => setDataPanelOpen(true)} />
+          ) : (
+            // Dashboard goes here in Week 4
+            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              Dashboard coming in Week 4
+            </div>
+          )}
         </div>
 
-        {/* Data panel — slides up from the bottom */}
         <DataPanel
           isOpen={dataPanelOpen}
           onClose={() => setDataPanelOpen(false)}
+          pageId={page.id}
         />
       </div>
     </div>
