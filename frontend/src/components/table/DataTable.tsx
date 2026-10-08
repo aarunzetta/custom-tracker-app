@@ -5,7 +5,7 @@ import {
   flexRender,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { Trash2, Plus, Loader2 } from "lucide-react";
+import { Trash2, Plus, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Column } from "@/stores/columnsStore";
 import { type TableRow, useRowsStore } from "@/stores/rowsStore";
@@ -24,27 +24,64 @@ export function DataTable({
   pageId,
   isLoading,
 }: DataTableProps) {
-  const { createRow } = useRowsStore();
+  const { createRow, getCellState } = useRowsStore();
 
-  // Build TanStack column definitions from our column schema
-  // useMemo prevents this from recalculating on every render
   const tableColumns = useMemo<ColumnDef<TableRow>[]>(() => {
-    const cols: ColumnDef<TableRow>[] = columns.map((col) => ({
-      id: col.id,
-      // accessorFn tells TanStack how to get the value for this column from a row
-      accessorFn: (row: TableRow) => row.cells[col.id]?.value ?? null,
-      header: col.name,
-      // cell is how TanStack renders each cell
-      cell: ({ row }) => (
-        <CellEditor
-          column={col}
-          rowId={row.original.id}
-          value={row.original.cells[col.id]?.value ?? null}
-        />
-      ),
-    }));
+    // Row number column
+    const cols: ColumnDef<TableRow>[] = [
+      {
+        id: "_rownum",
+        header: "#",
+        cell: ({ row }) => (
+          <span className="text-xs text-gray-400 select-none px-1">
+            {row.index + 1}
+          </span>
+        ),
+      },
+    ];
 
-    // Add a delete column at the end
+    // Data columns
+    columns.forEach((col, colIndex) => {
+      cols.push({
+        id: col.id,
+        accessorFn: (row: TableRow) => row.cells[col.id]?.value ?? null,
+        header: col.name,
+        cell: ({ row, table }) => {
+          const allRows = table.getRowModel().rows;
+          const rowIndex = allRows.findIndex((r) => r.id === row.id);
+          const cellState = getCellState(row.original.id, col.id);
+
+          // Tab next — move to next column, or first column of next row
+          function handleTabNext() {
+            const nextColIndex = colIndex + 1;
+            if (nextColIndex < columns.length) {
+              // Focus next column in same row — handled by browser naturally
+            } else if (rowIndex + 1 < allRows.length) {
+              // Last column — would move to next row (future enhancement)
+            }
+          }
+
+          // Tab prev — move to previous column
+          function handleTabPrev() {
+            // Browser handles naturally when we prevent default and don't override
+          }
+
+          return (
+            <CellWrapper state={cellState}>
+              <CellEditor
+                column={col}
+                rowId={row.original.id}
+                value={row.original.cells[col.id]?.value ?? null}
+                onTabNext={handleTabNext}
+                onTabPrev={handleTabPrev}
+              />
+            </CellWrapper>
+          );
+        },
+      });
+    });
+
+    // Delete column
     cols.push({
       id: "_actions",
       header: "",
@@ -52,14 +89,12 @@ export function DataTable({
     });
 
     return cols;
-  }, [columns]);
+  }, [columns, getCellState]);
 
-  // Initialize TanStack Table
   const table = useReactTable({
     data: rows,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
-    // Tell TanStack to use our row's id field
     getRowId: (row) => row.id,
   });
 
@@ -81,10 +116,8 @@ export function DataTable({
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Table wrapper — horizontal scroll for many columns */}
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full text-sm border-collapse">
-          {/* Header row */}
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr
@@ -97,7 +130,8 @@ export function DataTable({
                     className={cn(
                       "px-3 py-2 text-left text-xs font-medium text-gray-500",
                       "border-r border-gray-200 last:border-r-0",
-                      header.id === "_actions" ? "w-10" : "min-w-32",
+                      header.id === "_rownum" && "w-8",
+                      header.id === "_actions" && "w-10",
                     )}
                   >
                     {header.isPlaceholder
@@ -112,10 +146,8 @@ export function DataTable({
             ))}
           </thead>
 
-          {/* Body rows */}
           <tbody>
             {table.getRowModel().rows.length === 0 ? (
-              // Empty state inside the table
               <tr>
                 <td
                   colSpan={tableColumns.length}
@@ -163,6 +195,36 @@ export function DataTable({
         <Plus className="w-3.5 h-3.5" />
         Add row
       </button>
+    </div>
+  );
+}
+
+// ─── Cell wrapper — shows saving/error state ─────────────────────────────────
+
+type CellWrapperProps = {
+  state: "idle" | "saving" | "error";
+  children: React.ReactNode;
+};
+
+function CellWrapper({ state, children }: CellWrapperProps) {
+  return (
+    <div className="relative">
+      {children}
+      {/* Saving spinner — top right corner */}
+      {state === "saving" && (
+        <div className="absolute top-0.5 right-0.5 pointer-events-none">
+          <Loader2 className="w-2.5 h-2.5 text-gray-400 animate-spin" />
+        </div>
+      )}
+      {/* Error indicator */}
+      {state === "error" && (
+        <div
+          className="absolute top-0.5 right-0.5 pointer-events-none"
+          title="Failed to save"
+        >
+          <AlertCircle className="w-2.5 h-2.5 text-red-400" />
+        </div>
+      )}
     </div>
   );
 }

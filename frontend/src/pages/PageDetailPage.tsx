@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Loader2, AlertCircle } from "lucide-react";
 import { usePage } from "@/hooks/usePage";
 import { useColumnsStore } from "@/stores/columnsStore";
+import { useRowsStore } from "@/stores/rowsStore";
 import { EditableTitle } from "@/components/page/EditableTitle";
 import { IconPicker } from "@/components/page/IconPicker";
 import { DataPanelToggle } from "@/components/page/DataPanelToggle";
@@ -14,6 +15,15 @@ export function PageDetailPage() {
   const { page, isLoading, error, updatePage } = usePage(id);
   const { columns } = useColumnsStore();
   const [dataPanelOpen, setDataPanelOpen] = useState(false);
+
+  // Clear columns and rows when navigating away from this page
+  // Prevents stale data from a previous page flashing when you navigate
+  useEffect(() => {
+    return () => {
+      useColumnsStore.setState({ columns: [] });
+      useRowsStore.setState({ rows: [] });
+    };
+  }, [id]);
 
   if (isLoading) {
     return (
@@ -36,7 +46,6 @@ export function PageDetailPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Page header */}
       <div className="px-8 py-5 border-b border-gray-200 bg-white shrink-0">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -58,13 +67,11 @@ export function PageDetailPage() {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           {columns.length === 0 ? (
             <PageEmptyState onOpenData={() => setDataPanelOpen(true)} />
           ) : (
-            // Dashboard goes here in Week 4
             <div className="flex items-center justify-center h-full text-gray-400 text-sm">
               Dashboard coming in Week 4
             </div>

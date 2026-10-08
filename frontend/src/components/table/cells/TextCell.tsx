@@ -4,9 +4,16 @@ import { cn } from "@/lib/utils";
 type TextCellProps = {
   value: string | null;
   onSave: (value: string | null) => void;
+  onTabNext?: () => void;
+  onTabPrev?: () => void;
 };
 
-export function TextCell({ value, onSave }: TextCellProps) {
+export function TextCell({
+  value,
+  onSave,
+  onTabNext,
+  onTabPrev,
+}: TextCellProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(value ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -19,7 +26,6 @@ export function TextCell({ value, onSave }: TextCellProps) {
   }, [isEditing]);
 
   function handleEdit() {
-    // Reset draft to latest value when entering edit mode
     setDraft(value ?? "");
     setIsEditing(true);
   }
@@ -33,6 +39,15 @@ export function TextCell({ value, onSave }: TextCellProps) {
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter") handleSave();
     if (e.key === "Escape") setIsEditing(false);
+    if (e.key === "Tab") {
+      e.preventDefault();
+      handleSave();
+      if (e.shiftKey) {
+        onTabPrev?.();
+      } else {
+        onTabNext?.();
+      }
+    }
   }
 
   if (isEditing) {

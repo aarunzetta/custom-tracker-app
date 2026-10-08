@@ -8,9 +8,14 @@ export type TableRow = {
   cells: Record<string, { id: string; value: string | null }>;
 };
 
+// Tracks the save state of individual cells
+// Key format: "rowId:columnId"
+type CellSaveState = "idle" | "saving" | "error";
+
 type RowsStore = {
   rows: TableRow[];
   isLoading: boolean;
+  cellStates: Record<string, CellSaveState>;
   fetchRows: (pageId: string) => Promise<void>;
   createRow: (pageId: string) => Promise<TableRow>;
   deleteRow: (id: string) => Promise<void>;
@@ -19,11 +24,13 @@ type RowsStore = {
     columnId: string,
     value: string | null,
   ) => Promise<void>;
+  getCellState: (rowId: string, columnId: string) => CellSaveState;
 };
 
-export const useRowsStore = create<RowsStore>((set) => ({
+export const useRowsStore = create<RowsStore>((set, get) => ({
   rows: [],
   isLoading: false,
+  cellStates: {},
 
   fetchRows: async (pageId) => {
     set({ isLoading: true });
@@ -38,19 +45,19 @@ export const useRowsStore = create<RowsStore>((set) => ({
   createRow: async (pageId) => {
     const res = await api.post(`/pages/${pageId}/rows`);
     const newRow: TableRow = res.data;
-    // Append to the end of the list immediately
     set((state) => ({ rows: [...state.rows, newRow] }));
     return newRow;
   },
 
   deleteRow: async (id) => {
-    // Optimistic delete — remove from UI before server confirms
     set((state) => ({ rows: state.rows.filter((r) => r.id !== id) }));
     await api.delete(`/rows/${id}`);
   },
 
   updateCell: async (rowId, columnId, value) => {
-    // Optimistic update — update the cell in the UI immediately
+    const cellKey = `${rowId}:${columnId}`;
+
+    // Optimistic update
     set((state) => ({
       rows: state.rows.map((row) => {
         if (row.id !== rowId) return row;
@@ -65,9 +72,27 @@ export const useRowsStore = create<RowsStore>((set) => ({
           },
         };
       }),
+      cellStates: { ...state.cellStates, [cellKey]: "saving" },
     }));
 
-    // Persist to backend
-    await api.patch("/cells", { rowId, columnId, value });
+    try {
+      await api.patch("/cells", { rowId, columnId, value });
+      // Success — clear the saving state
+      set((state) => {
+        const newStates = { ...state.cellStates };
+        delete newStates[cellKey];
+        return { cellStates: newStates };
+      });
+    } catch {
+      // Failed — mark as error so UI can show retry
+      set((state) => ({
+        cellStates: { ...state.cellStates, [cellKey]: "error" },
+      }));
+    }
+  },
+
+  getCellState: (rowId, columnId) => {
+    const key = `${rowId}:${columnId}`;
+    return get().cellStates[key] ?? "idle";
   },
 }));

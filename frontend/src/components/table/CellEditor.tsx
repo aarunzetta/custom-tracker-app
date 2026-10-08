@@ -11,20 +11,34 @@ type CellEditorProps = {
   column: Column;
   rowId: string;
   value: string | null;
+  onTabNext?: () => void;
+  onTabPrev?: () => void;
 };
 
-export function CellEditor({ column, rowId, value }: CellEditorProps) {
+export function CellEditor({
+  column,
+  rowId,
+  value,
+  onTabNext,
+  onTabPrev,
+}: CellEditorProps) {
   const { updateCell } = useRowsStore();
 
   function handleSave(newValue: string | null) {
-    // Only save if value actually changed
     if (newValue === value) return;
     updateCell(rowId, column.id, newValue);
   }
 
   switch (column.type) {
     case "TEXT":
-      return <TextCell value={value} onSave={handleSave} />;
+      return (
+        <TextCell
+          value={value}
+          onSave={handleSave}
+          onTabNext={onTabNext}
+          onTabPrev={onTabPrev}
+        />
+      );
 
     case "NUMBER":
       return <NumberCell value={value} onSave={handleSave} />;
