@@ -1,6 +1,8 @@
 import { BarChart2 } from "lucide-react";
 import type { Widget } from "@/stores/widgetsStore";
 import { BarChartWidget } from "./charts/BarChartWidget";
+import { LineChartWidget } from "./charts/LineChartWidget";
+import { KpiWidget } from "./charts/KpiWidget";
 
 type WidgetRendererProps = {
   widget: Widget;
@@ -10,6 +12,12 @@ export function WidgetRenderer({ widget }: WidgetRendererProps) {
   switch (widget.type) {
     case "bar":
       return <BarChartWidget widget={widget} />;
+
+    case "line":
+      return <LineChartWidget widget={widget} />;
+
+    case "kpi":
+      return <KpiWidget widget={widget} />;
 
     default:
       return (

@@ -42,14 +42,22 @@ export function AddWidgetButton({
   const numberColumns = columns.filter((c) => c.type === "NUMBER");
 
   async function handleCreate() {
-    if (!title.trim() || !xColumnId) return;
+    if (!title.trim()) return;
+
+    // X column required for bar, line, pie — not for kpi
+    if ((type === "bar" || type === "line" || type === "pie") && !xColumnId)
+      return;
+
+    // Y column always required for line chart
+    if (type === "line" && !yColumnId) return;
+
     setIsSaving(true);
     try {
       await createWidget(pageId, {
         title: title.trim(),
         type,
         config: {
-          xColumnId,
+          xColumnId: xColumnId || undefined,
           yColumnId: yColumnId || undefined,
           aggregation,
         },
@@ -101,6 +109,7 @@ export function AddWidgetButton({
           </div>
 
           <div className="space-y-3">
+            {/* Title */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Title
@@ -109,18 +118,25 @@ export function AddWidgetButton({
                 autoFocus
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Books by Status"
+                placeholder="e.g. Tasks completed over time"
                 className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               />
             </div>
 
+            {/* Chart type */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Chart type
               </label>
               <select
                 value={type}
-                onChange={(e) => setType(e.target.value as WidgetType)}
+                onChange={(e) => {
+                  setType(e.target.value as WidgetType);
+                  // Reset column selections when type changes
+                  setXColumnId("");
+                  setYColumnId("");
+                  setAggregation("count");
+                }}
                 className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900"
               >
                 <option value="bar">Bar chart</option>
@@ -130,29 +146,44 @@ export function AddWidgetButton({
               </select>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Group by (X axis)
-              </label>
-              <select
-                value={xColumnId}
-                onChange={(e) => setXColumnId(e.target.value)}
-                className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900"
-              >
-                <option value="">Select column...</option>
-                {columns.map((col) => {
-                  const typeConfig = COLUMN_TYPES.find(
-                    (t) => t.type === col.type,
-                  );
-                  return (
-                    <option key={col.id} value={col.id}>
-                      {col.name} ({typeConfig?.label})
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
+            {/* X column — bar and line charts only */}
+            {(type === "bar" || type === "line" || type === "pie") && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  {type === "line"
+                    ? "Date column (X axis)"
+                    : "Group by (X axis)"}
+                </label>
+                <select
+                  value={xColumnId}
+                  onChange={(e) => setXColumnId(e.target.value)}
+                  className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  <option value="">Select column...</option>
+                  {/* Line chart — only show date columns for X */}
+                  {type === "line"
+                    ? columns
+                        .filter((c) => c.type === "DATE")
+                        .map((col) => (
+                          <option key={col.id} value={col.id}>
+                            {col.name}
+                          </option>
+                        ))
+                    : columns.map((col) => {
+                        const typeConfig = COLUMN_TYPES.find(
+                          (t) => t.type === col.type,
+                        );
+                        return (
+                          <option key={col.id} value={col.id}>
+                            {col.name} ({typeConfig?.label})
+                          </option>
+                        );
+                      })}
+                </select>
+              </div>
+            )}
 
+            {/* Aggregation */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Aggregation
@@ -170,10 +201,11 @@ export function AddWidgetButton({
               </select>
             </div>
 
-            {aggregation !== "count" && (
+            {/* Y column — for sum/avg on any type, or always for line */}
+            {(aggregation !== "count" || type === "line") && (
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Value column (Y axis)
+                  {type === "kpi" ? "Number column" : "Value column (Y axis)"}
                 </label>
                 <select
                   value={yColumnId}
@@ -190,9 +222,25 @@ export function AddWidgetButton({
               </div>
             )}
 
+            {/* Validation hint for line chart */}
+            {type === "line" &&
+              columns.filter((c) => c.type === "DATE").length === 0 && (
+                <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
+                  Line charts need a Date column. Add one in the Columns tab
+                  first.
+                </p>
+              )}
+
+            {/* Create button */}
             <button
               onClick={handleCreate}
-              disabled={!title.trim() || !xColumnId || isSaving}
+              disabled={
+                !title.trim() ||
+                ((type === "bar" || type === "line" || type === "pie") &&
+                  !xColumnId) ||
+                (type === "line" && !yColumnId) ||
+                isSaving
+              }
               className={cn(
                 "w-full py-2 rounded-lg text-sm font-medium",
                 "bg-gray-900 text-white hover:bg-gray-700",
