@@ -79,8 +79,9 @@ export async function widgetRoutes(app: FastifyInstance) {
   app.patch("/widgets/:id", async (request, reply) => {
     const user = await syncUser(request.user!.clerkId);
     const { id } = request.params as { id: string };
-    const { title, config, position } = request.body as {
+    const { title, type, config, position } = request.body as {
       title?: string;
+      type?: string;
       config?: Prisma.InputJsonValue;
       position?: number;
     };
@@ -98,6 +99,7 @@ export async function widgetRoutes(app: FastifyInstance) {
       where: { id },
       data: {
         ...(title !== undefined && { title: title.trim() }),
+        ...(type !== undefined && { type }),
         ...(config !== undefined && { config: config ?? Prisma.JsonNull }),
         ...(position !== undefined && { position }),
       },

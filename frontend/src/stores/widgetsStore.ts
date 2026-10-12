@@ -35,7 +35,7 @@ type WidgetsStore = {
   ) => Promise<Widget>;
   updateWidget: (
     id: string,
-    data: Partial<Pick<Widget, "title" | "config" | "position">>,
+    data: Partial<Pick<Widget, "title" | "type" | "config" | "position">>,
   ) => Promise<void>;
   deleteWidget: (id: string) => Promise<void>;
 };
@@ -64,7 +64,6 @@ export const useWidgetsStore = create<WidgetsStore>((set) => ({
   },
 
   updateWidget: async (id, data) => {
-    // Optimistic update
     set((state) => ({
       widgets: state.widgets.map((w) => (w.id === id ? { ...w, ...data } : w)),
     }));

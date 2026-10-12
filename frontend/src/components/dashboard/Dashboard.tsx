@@ -6,6 +6,7 @@ import { useRowsStore } from "@/stores/rowsStore";
 import { WidgetGrid } from "./WidgetGrid";
 import { DashboardEmpty } from "./DashboardEmpty";
 import { AddWidgetButton } from "./AddWidgetButton";
+import { WidgetConfigModal } from "./WidgetConfigModal";
 
 type DashboardProps = {
   pageId: string;
@@ -17,6 +18,9 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
   const { columns, fetchColumns } = useColumnsStore();
   const { rows, fetchRows } = useRowsStore();
   const [addWidgetOpen, setAddWidgetOpen] = useState(false);
+  const [configuringWidget, setConfiguringWidget] = useState<Widget | null>(
+    null,
+  );
 
   useEffect(() => {
     if (pageId) {
@@ -25,10 +29,6 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
       fetchRows(pageId);
     }
   }, [pageId]);
-
-  function handleConfigure(widget: Widget) {
-    console.log("Configure widget — coming Day 4", widget);
-  }
 
   if (isLoading) {
     return (
@@ -46,7 +46,6 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
           onAddWidget={() => setAddWidgetOpen(true)}
           onOpenData={onOpenData}
         />
-        {/* AddWidgetButton is hidden visually but open state is controlled */}
         <div className="absolute">
           <AddWidgetButton
             pageId={pageId}
@@ -60,6 +59,7 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Toolbar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-white shrink-0">
         <p className="text-xs text-gray-400">
           {widgets.length} {widgets.length === 1 ? "widget" : "widgets"} —{" "}
@@ -72,9 +72,16 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
         />
       </div>
 
+      {/* Widget grid */}
       <div className="flex-1 overflow-y-auto">
-        <WidgetGrid widgets={widgets} onConfigure={handleConfigure} />
+        <WidgetGrid widgets={widgets} onConfigure={setConfiguringWidget} />
       </div>
+
+      {/* Config modal */}
+      <WidgetConfigModal
+        widget={configuringWidget}
+        onClose={() => setConfiguringWidget(null)}
+      />
     </div>
   );
 }
