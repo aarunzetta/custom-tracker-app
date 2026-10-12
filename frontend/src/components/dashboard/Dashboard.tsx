@@ -22,6 +22,7 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
     null,
   );
 
+  // Initial fetch
   useEffect(() => {
     if (pageId) {
       fetchWidgets(pageId);
@@ -29,6 +30,10 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
       fetchRows(pageId);
     }
   }, [pageId]);
+
+  // Auto-refresh rows whenever the data panel makes changes
+  // The rows store updates optimistically, so charts re-render automatically
+  // No extra fetch needed — Zustand reactivity handles it
 
   if (isLoading) {
     return (
@@ -59,7 +64,6 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Toolbar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-white shrink-0">
         <p className="text-xs text-gray-400">
           {widgets.length} {widgets.length === 1 ? "widget" : "widgets"} —{" "}
@@ -72,12 +76,10 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
         />
       </div>
 
-      {/* Widget grid */}
       <div className="flex-1 overflow-y-auto">
         <WidgetGrid widgets={widgets} onConfigure={setConfiguringWidget} />
       </div>
 
-      {/* Config modal */}
       <WidgetConfigModal
         widget={configuringWidget}
         onClose={() => setConfiguringWidget(null)}

@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { MoreHorizontal, Trash2, Settings2, GripVertical } from "lucide-react";
+import {
+  MoreHorizontal,
+  Trash2,
+  Settings2,
+  GripVertical,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type Widget, useWidgetsStore } from "@/stores/widgetsStore";
 
@@ -7,18 +14,32 @@ type WidgetCardProps = {
   widget: Widget;
   onConfigure: (widget: Widget) => void;
   children: React.ReactNode;
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
 };
 
-export function WidgetCard({ widget, onConfigure, children }: WidgetCardProps) {
-  const { deleteWidget } = useWidgetsStore();
+export function WidgetCard({
+  widget,
+  onConfigure,
+  children,
+  dragHandleProps,
+}: WidgetCardProps) {
+  const { deleteWidget, updateWidget } = useWidgetsStore();
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isLarge = widget.config.size === "large";
 
+  async function handleToggleSize() {
+    const newSize = isLarge ? "small" : "large";
+    await updateWidget(widget.id, {
+      config: { ...widget.config, size: newSize },
+    });
+    setShowMenu(false);
+  }
+
   return (
     <div
       className={cn(
-        "bg-white border border-gray-200 rounded-xl overflow-hidden",
+        "bg-white border border-gray-200 rounded-xl overflow-visible",
         "flex flex-col group",
         isLarge ? "col-span-2" : "col-span-1",
       )}
@@ -26,14 +47,19 @@ export function WidgetCard({ widget, onConfigure, children }: WidgetCardProps) {
       {/* Card header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <div className="flex items-center gap-2 min-w-0">
-          {/* Drag handle — visual for now, wired in Day 5 */}
-          <GripVertical className="w-3.5 h-3.5 text-gray-300 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />
+          {/* Drag handle */}
+          <button
+            {...dragHandleProps}
+            className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity touch-none"
+          >
+            <GripVertical className="w-3.5 h-3.5" />
+          </button>
           <h3 className="text-sm font-medium text-gray-900 truncate">
             {widget.title}
           </h3>
         </div>
 
-        {/* Actions menu */}
+        {/* Actions */}
         <div className="relative shrink-0">
           <button
             onClick={() => {
@@ -51,7 +77,7 @@ export function WidgetCard({ widget, onConfigure, children }: WidgetCardProps) {
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 z-50 w-40 bg-white border border-gray-200 rounded-lg shadow-lg py-1">
+            <div className="absolute right-0 top-full mt-1 z-50 w-44 bg-white border border-gray-200 rounded-lg shadow-lg py-1">
               {!showDeleteConfirm ? (
                 <>
                   <button
@@ -64,6 +90,27 @@ export function WidgetCard({ widget, onConfigure, children }: WidgetCardProps) {
                     <Settings2 className="w-3.5 h-3.5" />
                     Configure
                   </button>
+
+                  {/* Size toggle */}
+                  <button
+                    onClick={handleToggleSize}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    {isLarge ? (
+                      <>
+                        <Minimize2 className="w-3.5 h-3.5" />
+                        Make smaller
+                      </>
+                    ) : (
+                      <>
+                        <Maximize2 className="w-3.5 h-3.5" />
+                        Make larger
+                      </>
+                    )}
+                  </button>
+
+                  <div className="border-t border-gray-100 my-1" />
+
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
                     className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
