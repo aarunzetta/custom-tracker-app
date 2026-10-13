@@ -1,4 +1,5 @@
 import { BarChart2, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type DashboardEmptyProps = {
   hasColumns: boolean;
@@ -15,23 +16,23 @@ export function DashboardEmpty({
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center max-w-sm">
-          <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-            <BarChart2 className="w-8 h-8 text-gray-400" />
+          <div className="w-16 h-16 rounded-2xl bg-(--color-surface-2) flex items-center justify-center mx-auto mb-4">
+            <BarChart2 className="w-8 h-8 text-(--color-text-faint)" />
           </div>
-          <h3 className="text-base font-semibold text-gray-900 mb-1">
+          <h3 className="text-base font-semibold text-(--color-text-primary) mb-1">
             No data yet
           </h3>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-(--color-text-muted) mb-6">
             Add columns and rows to your data first, then create charts to
             visualize it.
           </p>
-          <button
+          <Button
+            variant="primary"
+            leftIcon={<Plus className="w-4 h-4" />}
             onClick={onOpenData}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
           >
-            <Plus className="w-4 h-4" />
             Add data
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -40,22 +41,22 @@ export function DashboardEmpty({
   return (
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="text-center max-w-sm">
-        <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-          <BarChart2 className="w-8 h-8 text-gray-400" />
+        <div className="w-16 h-16 rounded-2xl bg-(--color-surface-2) flex items-center justify-center mx-auto mb-4">
+          <BarChart2 className="w-8 h-8 text-(--color-text-faint)" />
         </div>
-        <h3 className="text-base font-semibold text-gray-900 mb-1">
+        <h3 className="text-base font-semibold text-(--color-text-primary) mb-1">
           No charts yet
         </h3>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-(--color-text-muted) mb-6">
           Create your first chart to start visualizing your data.
         </p>
-        <button
+        <Button
+          variant="primary"
+          leftIcon={<Plus className="w-4 h-4" />}
           onClick={onAddWidget}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
         >
-          <Plus className="w-4 h-4" />
           Add chart
-        </button>
+        </Button>
       </div>
     </div>
   );

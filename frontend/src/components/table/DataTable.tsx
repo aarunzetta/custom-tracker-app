@@ -140,24 +140,31 @@ export function DataTable({
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <div className="overflow-x-auto rounded-lg border border-(--color-border)">
           <table className="w-full text-sm border-collapse">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr
                   key={headerGroup.id}
-                  className="bg-gray-50 border-b border-gray-200"
+                  className="border-b border-(--color-border)"
+                  style={{ background: "var(--color-surface-2)" }}
                 >
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
                       className={cn(
-                        "px-3 py-2 text-left text-xs font-medium text-gray-500",
-                        "border-r border-gray-200 last:border-r-0",
+                        "px-3 py-2 text-left text-xs font-medium",
+                        "text-(--color-text-muted)",
+                        "border-r border-(--color-border) last:border-r-0",
                         header.id === "_rownum" &&
                           "w-8 sticky left-0 bg-gray-50 z-10",
                         header.id === "_actions" && "w-10",
                       )}
+                      style={
+                        header.id === "_rownum"
+                          ? { background: "var(--color-surface-2)" }
+                          : {}
+                      }
                     >
                       {/* Wrap data column headers in SortableContext */}
                       {header.id !== "_rownum" && header.id !== "_actions" ? (
@@ -202,18 +209,22 @@ export function DataTable({
                   <tr
                     key={row.id}
                     className={cn(
-                      "border-b border-gray-100 last:border-b-0",
-                      "hover:bg-gray-50 transition-colors group",
+                      "border-b border-(--color-border) last:border-b-0",
+                      "hover:bg-(--color-surface-2) transition-colors group",
                     )}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
                         className={cn(
-                          "px-3 py-1.5 border-r border-gray-100 last:border-r-0",
-                          cell.column.id === "_rownum" &&
-                            "sticky left-0 bg-white group-hover:bg-gray-50 z-10",
+                          "px-3 py-1.5 border-r border-(--color-border) last:border-r-0",
+                          cell.column.id === "_rownum" && "sticky left-0 z-10",
                         )}
+                        style={
+                          cell.column.id === "_rownum"
+                            ? { background: "var(--color-surface)" }
+                            : {}
+                        }
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

@@ -30,7 +30,8 @@ export function DataPanel({ isOpen, onClose, pageId }: DataPanelProps) {
   return (
     <div
       className={cn(
-        "border-t border-gray-200 bg-white shrink-0",
+        "border-t border-(--color-border) shrink-0",
+        "bg-(--color-surface)",
         "transition-all duration-300 ease-in-out",
         isOpen ? "h-80" : "h-0",
       )}

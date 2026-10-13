@@ -38,13 +38,15 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "relative flex flex-col bg-white border-r border-gray-200",
-        "transition-all duration-200 ease-in-out shrink-0",
+        "relative flex flex-col shrink-0",
+        "border-r border-(--color-border)",
+        "bg-(--color-surface)",
+        "transition-all duration-200 ease-in-out",
         isOpen ? "w-60" : "w-14",
       )}
     >
       {/* Logo */}
-      <div className="flex items-center h-14 px-4 border-b border-gray-200 shrink-0">
+      <div className="flex items-center h-14 px-4 border-b border-(--color-border) shrink-0">
         <div className="flex items-center gap-2 overflow-hidden">
           <div className="w-6 h-6 rounded-md bg-gray-900 shrink-0" />
           {isOpen && (
@@ -60,10 +62,11 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
         onClick={onToggle}
         className={cn(
           "absolute -right-3 top-13 z-10",
-          "w-6 h-6 rounded-full bg-white border border-gray-200",
+          "w-6 h-6 rounded-full",
+          "bg-(--color-surface) border border-(--color-border)",
           "flex items-center justify-center",
-          "text-gray-400 hover:text-gray-700",
-          "transition-colors shadow-sm",
+          "text-(--color-text-faint) hover:text-(--color-text-primary)",
+          "transition-colors shadow-(--shadow-sm)",
         )}
       >
         {isOpen ? (
@@ -137,7 +140,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       {/* User */}
       <div
         className={cn(
-          "shrink-0 border-t border-gray-200 p-3 flex items-center",
+          "shrink-0 border-t border-(--color-border) p-3 flex items-center",
           isOpen ? "gap-3" : "justify-center",
         )}
       >

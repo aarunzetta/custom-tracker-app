@@ -61,33 +61,36 @@ export function LineChartWidget({ widget }: LineChartWidgetProps) {
       <LineChart
         data={data}
         margin={{ top: 4, right: 8, left: -20, bottom: 4 }}
+        style={{ background: "transparent" }}
       >
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 11, fill: "#9ca3af" }}
+          tick={{ fontSize: 11, fill: "var(--color-text-faint)" }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 11, fill: "#9ca3af" }}
+          tick={{ fontSize: 11, fill: "var(--color-text-faint)" }}
           axisLine={false}
           tickLine={false}
         />
         <Tooltip
           contentStyle={{
             fontSize: 12,
-            border: "1px solid #e5e7eb",
+            border: "1px solid var(--color-border)",
             borderRadius: 8,
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+            backgroundColor: "var(--color-surface)",
+            color: "var(--color-text-primary)",
+            boxShadow: "var(--shadow-md)",
           }}
         />
         <Line
           type="monotone"
           dataKey="value"
-          stroke="#111827"
+          stroke="var(--color-accent)"
           strokeWidth={2}
-          dot={{ fill: "#111827", r: 3 }}
+          dot={{ fill: "var(--color-accent)", r: 3 }}
           activeDot={{ r: 5 }}
         />
       </LineChart>

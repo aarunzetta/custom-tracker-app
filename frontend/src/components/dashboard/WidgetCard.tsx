@@ -39,7 +39,8 @@ export function WidgetCard({
   return (
     <div
       className={cn(
-        "bg-white border border-gray-200 rounded-xl overflow-visible",
+        "border border-(--color-border) rounded-xl overflow-visible",
+        "bg-(--color-surface)",
         "flex flex-col group",
         isLarge ? "col-span-2" : "col-span-1",
       )}
