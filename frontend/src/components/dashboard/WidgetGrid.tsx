@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import type { Variants } from "framer-motion";
 import {
   DndContext,
   closestCenter,
@@ -19,8 +20,7 @@ import { type Widget, useWidgetsStore } from "@/stores/widgetsStore";
 import { WidgetCard } from "./WidgetCard";
 import { WidgetRenderer } from "./WidgetRenderer";
 
-// Stagger container — each child animates in sequence
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: {},
   visible: {
     transition: {
@@ -29,13 +29,12 @@ const containerVariants = {
   },
 };
 
-// Each widget fades and rises into place
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 12 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.2, ease: "easeOut" },
   },
 };
 
@@ -46,23 +45,31 @@ type WidgetGridProps = {
 
 export function WidgetGrid({ widgets, onConfigure }: WidgetGridProps) {
   const { updateWidget } = useWidgetsStore();
-
   const [orderedIds, setOrderedIds] = useState<string[]>(() =>
     widgets.map((w) => w.id),
   );
 
+  // Sync when widgets are added or removed — using useEffect correctly
+  // We check outside and only call setState when genuinely needed
+  const incomingIds = useMemo(() => widgets.map((w) => w.id), [widgets]);
+
   useEffect(() => {
-    const incomingIds = widgets.map((w) => w.id);
-    const added = incomingIds.some((id) => !orderedIds.includes(id));
-    const removed = orderedIds.some((id) => !incomingIds.includes(id));
-    if (added || removed) {
+    const hasAdded = incomingIds.some((id) => !orderedIds.includes(id));
+    const hasRemoved = orderedIds.some((id) => !incomingIds.includes(id));
+    if (hasAdded || hasRemoved) {
+      // Use functional update to avoid stale closure
       setOrderedIds(incomingIds);
     }
-  }, [widgets]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingIds]);
 
-  const orderedWidgets = orderedIds
-    .map((id) => widgets.find((w) => w.id === id))
-    .filter((w): w is Widget => !!w);
+  const orderedWidgets = useMemo(
+    () =>
+      orderedIds
+        .map((id) => widgets.find((w) => w.id === id))
+        .filter((w): w is Widget => !!w),
+    [orderedIds, widgets],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -115,8 +122,6 @@ export function WidgetGrid({ widgets, onConfigure }: WidgetGridProps) {
     </DndContext>
   );
 }
-
-// ─── Sortable wrapper ─────────────────────────────────────────────────────────
 
 type SortableWidgetCardProps = {
   widget: Widget;

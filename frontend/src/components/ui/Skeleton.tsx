@@ -2,9 +2,10 @@ import { cn } from "@/lib/utils";
 
 type SkeletonProps = {
   className?: string;
+  style?: React.CSSProperties;
 };
 
-export function Skeleton({ className }: SkeletonProps) {
+export function Skeleton({ className, style }: SkeletonProps) {
   return (
     <div
       className={cn(
@@ -12,11 +13,10 @@ export function Skeleton({ className }: SkeletonProps) {
         "bg-(--color-surface-2)",
         className,
       )}
+      style={style}
     />
   );
 }
-
-// Pre-built skeleton layouts for common use cases
 
 export function TableRowSkeleton() {
   return (
@@ -33,7 +33,6 @@ export function TableRowSkeleton() {
 export function TableSkeleton() {
   return (
     <div className="rounded-lg border border-(--color-border) overflow-hidden">
-      {/* Header */}
       <div
         className="flex items-center gap-3 px-4 py-2.5 border-b border-(--color-border)"
         style={{ background: "var(--color-surface-2)" }}
@@ -43,13 +42,15 @@ export function TableSkeleton() {
         <Skeleton className="w-20 h-3 ml-4" />
         <Skeleton className="w-16 h-3 ml-4" />
       </div>
-      {/* Rows */}
       {Array.from({ length: 5 }).map((_, i) => (
         <TableRowSkeleton key={i} />
       ))}
     </div>
   );
 }
+
+// Pre-computed heights — never call Math.random() during render
+const WIDGET_BAR_HEIGHTS = [65, 85, 45, 90, 55, 70];
 
 export function WidgetSkeleton({ large = false }: { large?: boolean }) {
   return (
@@ -60,20 +61,16 @@ export function WidgetSkeleton({ large = false }: { large?: boolean }) {
         large ? "col-span-2" : "col-span-1",
       )}
     >
-      {/* Widget header */}
       <div className="flex items-center justify-between mb-4">
         <Skeleton className="w-32 h-4" />
         <Skeleton className="w-6 h-6 rounded-md" />
       </div>
-      {/* Chart placeholder */}
       <div className="flex items-end gap-2 h-32 px-2">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {WIDGET_BAR_HEIGHTS.map((height, i) => (
           <Skeleton
             key={i}
             className="flex-1 rounded-t-sm"
-            style={{
-              height: `${30 + Math.random() * 70}%`,
-            }}
+            style={{ height: `${height}%` }}
           />
         ))}
       </div>
