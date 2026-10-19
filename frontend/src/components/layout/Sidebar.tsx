@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserButton } from "@clerk/clerk-react";
@@ -171,21 +172,31 @@ function SidebarItem({
   onClick,
 }: SidebarItemProps) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
+      whileTap={{ scale: 0.97 }}
       className={cn(
-        "w-full flex items-center gap-2 px-2 py-1.5 rounded-md",
-        "transition-colors text-sm text-left",
+        "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg",
+        "transition-colors text-sm text-left relative",
         isActive
-          ? "bg-gray-100 text-gray-900 font-medium"
-          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+          ? "text-(--color-text-primary) font-medium"
+          : "text-(--color-text-muted) hover:text-(--color-text-primary)",
         !isOpen && "justify-center",
       )}
       title={!isOpen ? label : undefined}
     >
-      {icon}
-      {isOpen && <span className="truncate">{label}</span>}
-    </button>
+      {/* Active indicator */}
+      {isActive && (
+        <motion.div
+          layoutId="sidebar-active"
+          className="absolute inset-0 rounded-lg"
+          style={{ background: "var(--color-surface-2)" }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
+        />
+      )}
+      <span className="relative z-10">{icon}</span>
+      {isOpen && <span className="relative z-10 truncate">{label}</span>}
+    </motion.button>
   );
 }
 

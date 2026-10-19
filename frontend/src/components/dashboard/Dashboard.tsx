@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { useWidgetsStore, type Widget } from "@/stores/widgetsStore";
 import { useColumnsStore } from "@/stores/columnsStore";
 import { useRowsStore } from "@/stores/rowsStore";
@@ -7,6 +6,7 @@ import { WidgetGrid } from "./WidgetGrid";
 import { DashboardEmpty } from "./DashboardEmpty";
 import { AddWidgetButton } from "./AddWidgetButton";
 import { WidgetConfigModal } from "./WidgetConfigModal";
+import { DashboardSkeleton } from "@/components/ui/Skeleton";
 
 type DashboardProps = {
   pageId: string;
@@ -37,8 +37,8 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+      <div className="flex-1 overflow-y-auto">
+        <DashboardSkeleton />
       </div>
     );
   }

@@ -23,6 +23,7 @@ import { type Column, useColumnsStore } from "@/stores/columnsStore";
 import { type TableRow, useRowsStore } from "@/stores/rowsStore";
 import { CellEditor } from "./CellEditor";
 import { SortableHeader } from "./SortableHeader";
+import { TableSkeleton } from "@/components/ui/Skeleton";
 
 type DataTableProps = {
   columns: Column[];
@@ -116,11 +117,7 @@ export function DataTable({
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-      </div>
-    );
+    return <TableSkeleton />;
   }
 
   if (columns.length === 0) {

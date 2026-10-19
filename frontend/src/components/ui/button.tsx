@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -67,11 +68,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     return (
-      <button
+      <motion.button
         ref={ref}
+        whileTap={!disabled && !isLoading ? { scale: 0.97 } : undefined}
         disabled={disabled || isLoading}
         className={cn(baseStyles, variants[variant], sizes[size], className)}
-        {...props}
+        {...(props as any)}
       >
         {isLoading ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
@@ -82,7 +84,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {rightIcon && !isLoading && (
           <span className="shrink-0">{rightIcon}</span>
         )}
-      </button>
+      </motion.button>
     );
   },
 );
