@@ -52,7 +52,7 @@ export function PieChartWidget({ widget }: PieChartWidgetProps) {
 
   return (
     <ResponsiveContainer width="100%" height={200}>
-      <PieChart>
+      <PieChart style={{ background: "transparent" }}>
         <Pie
           data={data}
           dataKey="value"
@@ -70,9 +70,11 @@ export function PieChartWidget({ widget }: PieChartWidgetProps) {
         <Tooltip
           contentStyle={{
             fontSize: 12,
-            border: "1px solid #e5e7eb",
+            border: "1px solid var(--color-border)",
             borderRadius: 8,
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+            backgroundColor: "var(--color-surface)",
+            color: "var(--color-text-primary)",
+            boxShadow: "var(--shadow-md)",
           }}
           formatter={(value: number, name: string) => [
             `${value} (${Math.round((value / total) * 100)}%)`,
@@ -82,7 +84,10 @@ export function PieChartWidget({ widget }: PieChartWidgetProps) {
         <Legend
           iconType="circle"
           iconSize={8}
-          wrapperStyle={{ fontSize: 11, color: "#6b7280" }}
+          wrapperStyle={{
+            fontSize: 11,
+            color: "var(--color-text-muted)",
+          }}
         />
       </PieChart>
     </ResponsiveContainer>

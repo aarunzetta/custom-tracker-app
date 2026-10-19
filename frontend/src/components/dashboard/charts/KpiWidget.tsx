@@ -36,23 +36,20 @@ export function KpiWidget({ widget }: KpiWidgetProps) {
 
   return (
     <div className="flex flex-col items-center justify-center h-32 gap-2">
-      {/* Icon */}
-      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-        <Icon className="w-4 h-4 text-gray-500" />
+      <div className="w-8 h-8 rounded-lg bg-(--color-surface-2) flex items-center justify-center">
+        <Icon className="w-4 h-4 text-(--color-text-muted)" />
       </div>
-
-      {/* Big number */}
       <div
         className={cn(
-          "font-bold text-gray-900 leading-none",
+          "font-bold text-(--color-text-primary) leading-none",
           formattedValue.length > 8 ? "text-2xl" : "text-3xl",
         )}
       >
         {formattedValue}
       </div>
-
-      {/* Label */}
-      <p className="text-xs text-gray-400 text-center">{label}</p>
+      <p className="text-xs text-(--color-text-faint) text-center">
+        {label}
+      </p>
     </div>
   );
 }

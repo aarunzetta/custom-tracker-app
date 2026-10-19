@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, Table2, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useColumnsStore } from "@/stores/columnsStore";
@@ -28,17 +29,18 @@ export function DataPanel({ isOpen, onClose, pageId }: DataPanelProps) {
   }, [isOpen, pageId]);
 
   return (
-    <div
-      className={cn(
-        "border-t border-gray-200 bg-white shrink-0",
-        "transition-all duration-300 ease-in-out",
-        isOpen ? "h-80" : "h-0",
-      )}
-    >
+    <AnimatePresence>
       {isOpen && (
-        <div className="flex flex-col h-full">
+        <motion.div
+          className="border-t border-(--color-border) bg-(--color-surface) shrink-0 flex flex-col"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 320, opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+          style={{ overflow: "hidden" }}
+        >
           {/* Panel header */}
-          <div className="flex items-center justify-between px-6 py-2.5 border-b border-gray-100 shrink-0">
+          <div className="flex items-center justify-between px-6 py-2.5 border-b border-(--color-border) shrink-0">
             <div className="flex items-center gap-1">
               <TabButton
                 label="Table"
@@ -52,19 +54,26 @@ export function DataPanel({ isOpen, onClose, pageId }: DataPanelProps) {
                 isActive={activeTab === "columns"}
                 onClick={() => setActiveTab("columns")}
               />
-              <span className="ml-2 text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+              <span
+                className="ml-2 text-xs px-2 py-0.5 rounded-full"
+                style={{
+                  color: "var(--color-text-faint)",
+                  background: "var(--color-surface-2)",
+                }}
+              >
                 {rows.length} {rows.length === 1 ? "row" : "rows"}
               </span>
             </div>
             <button
               onClick={onClose}
-              className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+              className="w-6 h-6 flex items-center justify-center rounded hover:bg-(--color-surface-2) transition-colors"
+              style={{ color: "var(--color-text-faint)" }}
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Table tab — scrollable */}
+          {/* Table tab */}
           {activeTab === "table" && (
             <div className="flex-1 overflow-auto px-6 py-4">
               <DataTable
@@ -76,26 +85,24 @@ export function DataPanel({ isOpen, onClose, pageId }: DataPanelProps) {
             </div>
           )}
 
-          {/* Columns tab — split into scrollable list + fixed bottom button */}
+          {/* Columns tab */}
           {activeTab === "columns" && (
             <div className="flex flex-col flex-1 min-h-0">
-              {/* Scrollable columns list */}
               <div className="flex-1 overflow-y-auto px-6 pt-4">
                 <ColumnList columns={columns} pageId={pageId} />
               </div>
-
-              {/* Add column button sits OUTSIDE the scroll container */}
-              {/* This means it's never clipped by overflow */}
-              <div className="px-6 py-3 border-t border-gray-100 shrink-0">
+              <div className="px-6 py-3 border-t border-(--color-border) shrink-0">
                 <AddColumnPopover pageId={pageId} />
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
   );
 }
+
+// ─── Tab button ───────────────────────────────────────────────────────────────
 
 type TabButtonProps = {
   label: string;
@@ -110,10 +117,14 @@ function TabButton({ label, icon, isActive, onClick }: TabButtonProps) {
       onClick={onClick}
       className={cn(
         "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors",
-        isActive
-          ? "bg-gray-100 text-gray-900 font-medium"
-          : "text-gray-500 hover:text-gray-700 hover:bg-gray-50",
+        isActive ? "font-medium" : "",
       )}
+      style={{
+        background: isActive ? "var(--color-surface-2)" : "transparent",
+        color: isActive
+          ? "var(--color-text-primary)"
+          : "var(--color-text-muted)",
+      }}
     >
       {icon}
       {label}

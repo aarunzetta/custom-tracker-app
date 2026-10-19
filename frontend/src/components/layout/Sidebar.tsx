@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserButton } from "@clerk/clerk-react";
@@ -38,13 +39,15 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "relative flex flex-col bg-white border-r border-gray-200",
-        "transition-all duration-200 ease-in-out shrink-0",
+        "relative flex flex-col shrink-0",
+        "border-r border-(--color-border)",
+        "bg-(--color-surface)",
+        "transition-all duration-200 ease-in-out",
         isOpen ? "w-60" : "w-14",
       )}
     >
       {/* Logo */}
-      <div className="flex items-center h-14 px-4 border-b border-gray-200 shrink-0">
+      <div className="flex items-center h-14 px-4 border-b border-(--color-border) shrink-0">
         <div className="flex items-center gap-2 overflow-hidden">
           <div className="w-6 h-6 rounded-md bg-gray-900 shrink-0" />
           {isOpen && (
@@ -60,10 +63,11 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
         onClick={onToggle}
         className={cn(
           "absolute -right-3 top-13 z-10",
-          "w-6 h-6 rounded-full bg-white border border-gray-200",
+          "w-6 h-6 rounded-full",
+          "bg-(--color-surface) border border-(--color-border)",
           "flex items-center justify-center",
-          "text-gray-400 hover:text-gray-700",
-          "transition-colors shadow-sm",
+          "text-(--color-text-faint) hover:text-(--color-text-primary)",
+          "transition-colors shadow-(--shadow-sm)",
         )}
       >
         {isOpen ? (
@@ -137,7 +141,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       {/* User */}
       <div
         className={cn(
-          "shrink-0 border-t border-gray-200 p-3 flex items-center",
+          "shrink-0 border-t border-(--color-border) p-3 flex items-center",
           isOpen ? "gap-3" : "justify-center",
         )}
       >
@@ -168,21 +172,31 @@ function SidebarItem({
   onClick,
 }: SidebarItemProps) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
+      whileTap={{ scale: 0.97 }}
       className={cn(
-        "w-full flex items-center gap-2 px-2 py-1.5 rounded-md",
-        "transition-colors text-sm text-left",
+        "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg",
+        "transition-colors text-sm text-left relative",
         isActive
-          ? "bg-gray-100 text-gray-900 font-medium"
-          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+          ? "text-(--color-text-primary) font-medium"
+          : "text-(--color-text-muted) hover:text-(--color-text-primary)",
         !isOpen && "justify-center",
       )}
       title={!isOpen ? label : undefined}
     >
-      {icon}
-      {isOpen && <span className="truncate">{label}</span>}
-    </button>
+      {/* Active indicator */}
+      {isActive && (
+        <motion.div
+          layoutId="sidebar-active"
+          className="absolute inset-0 rounded-lg"
+          style={{ background: "var(--color-surface-2)" }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
+        />
+      )}
+      <span className="relative z-10">{icon}</span>
+      {isOpen && <span className="relative z-10 truncate">{label}</span>}
+    </motion.button>
   );
 }
 

@@ -1,6 +1,8 @@
 import { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "./button";
 
 type ModalProps = {
   isOpen: boolean;
@@ -17,7 +19,6 @@ export function Modal({
   children,
   width = "md",
 }: ModalProps) {
-  // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
     function handleKeyDown(e: KeyboardEvent) {
@@ -27,7 +28,6 @@ export function Modal({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Prevent background scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -39,8 +39,6 @@ export function Modal({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const widthClass = {
     sm: "max-w-sm",
     md: "max-w-lg",
@@ -48,37 +46,53 @@ export function Modal({
   }[width];
 
   return (
-    // Backdrop
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+    <AnimatePresence>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-100 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          {/* Backdrop */}
+          <motion.div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          />
 
-      {/* Modal panel */}
-      <div
-        className={cn(
-          "relative w-full bg-white rounded-2xl shadow-2xl",
-          "flex flex-col max-h-[90vh]",
-          widthClass,
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-          <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-          <button
-            onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+          {/* Panel */}
+          <motion.div
+            className={cn(
+              "relative w-full rounded-2xl",
+              "bg-(--color-surface)",
+              "shadow-(--shadow-xl)",
+              "flex flex-col max-h-[90vh]",
+              widthClass,
+            )}
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <X className="w-4 h-4" />
-          </button>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-(--color-border) shrink-0">
+              <h2 className="text-base font-semibold text-(--color-text-primary)">
+                {title}
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="w-7 h-7 p-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto">{children}</div>
+          </motion.div>
         </div>
-
-        {/* Modal content — scrollable */}
-        <div className="flex-1 overflow-y-auto">{children}</div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }
