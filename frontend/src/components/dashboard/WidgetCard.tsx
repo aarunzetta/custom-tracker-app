@@ -52,6 +52,7 @@ export function WidgetCard({
           <button
             {...dragHandleProps}
             className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity touch-none"
+            aria-label="Drag to reorder widget"
           >
             <GripVertical className="w-3.5 h-3.5" />
           </button>
@@ -73,6 +74,8 @@ export function WidgetCard({
               "opacity-0 group-hover:opacity-100 transition-all",
               showMenu && "opacity-100",
             )}
+            aria-label="Widget actions"
+            aria-expanded={showMenu}
           >
             <MoreHorizontal className="w-4 h-4" />
           </button>

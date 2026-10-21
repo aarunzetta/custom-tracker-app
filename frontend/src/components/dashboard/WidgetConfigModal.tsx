@@ -6,7 +6,6 @@ import {
   useWidgetsStore,
 } from "@/stores/widgetsStore";
 import { useColumnsStore } from "@/stores/columnsStore";
-import { useRowsStore } from "@/stores/rowsStore";
 import { COLUMN_TYPES } from "@/config/columnTypes";
 import { WidgetRenderer } from "./WidgetRenderer";
 import { cn } from "@/lib/utils";
@@ -19,7 +18,6 @@ type WidgetConfigModalProps = {
 export function WidgetConfigModal({ widget, onClose }: WidgetConfigModalProps) {
   const { updateWidget } = useWidgetsStore();
   const { columns } = useColumnsStore();
-  const { rows } = useRowsStore();
 
   // Local state — pre-filled from widget
   const [title, setTitle] = useState("");

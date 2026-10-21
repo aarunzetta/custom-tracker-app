@@ -40,6 +40,7 @@ export function SortableHeader({ column }: SortableHeaderProps) {
         {...attributes}
         {...listeners}
         className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 shrink-0 touch-none"
+        aria-label={`Drag to reorder ${column.name}`}
       >
         <GripVertical className="w-3 h-3" />
       </button>

@@ -11,6 +11,7 @@ import { useColumnsStore } from "@/stores/columnsStore";
 import { useRowsStore } from "@/stores/rowsStore";
 import type { Widget } from "@/stores/widgetsStore";
 import type { TableRow } from "@/stores/rowsStore";
+import { useMemo } from "react";
 
 type LineChartWidgetProps = {
   widget: Widget;
@@ -22,9 +23,14 @@ type LineDataPoint = {
 };
 
 export function LineChartWidget({ widget }: LineChartWidgetProps) {
-  const { columns } = useColumnsStore();
-  const { rows } = useRowsStore();
+  const columns = useColumnsStore((s) => s.columns);
+  const rows = useRowsStore((s) => s.rows);
   const { xColumnId, yColumnId, aggregation = "sum" } = widget.config;
+
+  const data = useMemo(() => {
+    if (!xColumnId || !yColumnId) return [];
+    return buildLineData(rows, xColumnId, yColumnId, aggregation);
+  }, [rows, xColumnId, yColumnId, aggregation]);
 
   if (!xColumnId || !yColumnId) {
     return (
@@ -44,9 +50,6 @@ export function LineChartWidget({ widget }: LineChartWidgetProps) {
       </div>
     );
   }
-
-  // Build line chart data — group by date, aggregate Y values
-  const data = buildLineData(rows, xColumnId, yColumnId, aggregation);
 
   if (data.length === 0) {
     return (
@@ -98,56 +101,50 @@ export function LineChartWidget({ widget }: LineChartWidgetProps) {
   );
 }
 
+function formatDateLabel(dateStr: string): string {
+  const date = new Date(dateStr + "T00:00:00");
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 function buildLineData(
   rows: TableRow[],
   xColumnId: string,
   yColumnId: string,
   aggregation: string,
 ): LineDataPoint[] {
-  // Group rows by date value
+  // Group by the RAW date string ("2026-10-07") so sorting is chronological
   const groups: Record<string, number[]> = {};
 
   for (const row of rows) {
     const dateValue = row.cells[xColumnId]?.value;
-    const numRaw = row.cells[yColumnId]?.value;
-    const numValue = parseFloat(numRaw ?? "");
-
+    const numValue = parseFloat(row.cells[yColumnId]?.value ?? "");
     if (!dateValue || isNaN(numValue)) continue;
 
-    // Format date for display: "2024-01-15" → "Jan 15"
-    // eslint-disable-next-line no-useless-assignment
-    let label = dateValue;
-    try {
-      label = new Date(dateValue + "T00:00:00").toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      label = dateValue;
-    }
-
-    if (!groups[label]) groups[label] = [];
-    groups[label].push(numValue);
+    if (!groups[dateValue]) groups[dateValue] = [];
+    groups[dateValue].push(numValue);
   }
 
-  // Sort by original date string to keep chronological order
-  const sortedEntries = Object.entries(groups).sort(([a], [b]) =>
-    a.localeCompare(b),
-  );
-
-  return sortedEntries.map(([label, values]) => {
-    let value = 0;
-    switch (aggregation) {
-      case "sum":
-        value = values.reduce((a, b) => a + b, 0);
-        break;
-      case "avg":
-        value = values.reduce((a, b) => a + b, 0) / values.length;
-        break;
-      case "count":
-        value = values.length;
-        break;
-    }
-    return { label, value: Math.round(value * 100) / 100 };
-  });
+  // ISO dates (YYYY-MM-DD) sort correctly as plain strings
+  return Object.entries(groups)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, values]) => {
+      let value = 0;
+      switch (aggregation) {
+        case "sum":
+          value = values.reduce((a, b) => a + b, 0);
+          break;
+        case "avg":
+          value = values.reduce((a, b) => a + b, 0) / values.length;
+          break;
+        case "count":
+          value = values.length;
+          break;
+      }
+      // Format for display only AFTER sorting
+      return {
+        label: formatDateLabel(date),
+        value: Math.round(value * 100) / 100,
+      };
+    });
 }

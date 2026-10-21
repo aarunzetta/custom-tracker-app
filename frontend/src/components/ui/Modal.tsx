@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,9 @@ type ModalProps = {
   width?: "sm" | "md" | "lg";
 };
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Modal({
   isOpen,
   onClose,
@@ -19,23 +22,53 @@ export function Modal({
   children,
   width = "md",
 }: ModalProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+
+  // Keep the latest onClose without re-running the focus effect.
+  // (Parents often pass a new inline function on every render.)
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    if (!isOpen) return;
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+    if (!isOpen) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    panelRef.current?.focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onCloseRef.current();
+        return;
+      }
+      if (e.key !== "Tab" || !panelRef.current) return;
+
+      const focusable =
+        panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE);
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      // Trap focus: wrap around at the edges
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+
     return () => {
+      document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
+      previouslyFocused?.focus(); // give focus back to what opened the modal
     };
   }, [isOpen]);
 
@@ -52,7 +85,6 @@ export function Modal({
           className="fixed inset-0 z-100 flex items-center justify-center p-4"
           onClick={onClose}
         >
-          {/* Backdrop */}
           <motion.div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             initial={{ opacity: 0 }}
@@ -61,12 +93,15 @@ export function Modal({
             transition={{ duration: 0.15 }}
           />
 
-          {/* Panel */}
           <motion.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            tabIndex={-1}
             className={cn(
-              "relative w-full rounded-2xl",
-              "bg-(--color-surface)",
-              "shadow-(--shadow-xl)",
+              "relative w-full rounded-2xl outline-none",
+              "bg-(--color-surface) shadow-(--shadow-xl)",
               "flex flex-col max-h-[90vh]",
               widthClass,
             )}
@@ -74,16 +109,20 @@ export function Modal({
             initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-(--color-border) shrink-0">
-              <h2 className="text-base font-semibold text-(--color-text-primary)">
+              <h2
+                id={titleId}
+                className="text-base font-semibold text-(--color-text-primary)"
+              >
                 {title}
               </h2>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
+                aria-label="Close dialog"
                 className="w-7 h-7 p-0"
               >
                 <X className="w-4 h-4" />

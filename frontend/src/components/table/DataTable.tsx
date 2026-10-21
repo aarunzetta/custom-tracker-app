@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   useReactTable,
   getCoreRowModel,
@@ -101,6 +102,23 @@ export function DataTable({
     getRowId: (row) => row.id,
   });
 
+  const parentRef = useRef<HTMLDivElement>(null);
+  const tableRows = table.getRowModel().rows;
+
+  const rowVirtualizer = useVirtualizer({
+    count: tableRows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 41, // approximate row height in px
+    overscan: 8, // extra rows rendered above/below the visible area
+  });
+
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0;
+  const paddingBottom =
+    virtualRows.length > 0
+      ? rowVirtualizer.getTotalSize() - virtualRows[virtualRows.length - 1].end
+      : 0;
+
   // IDs for the sortable context — only the data columns, not _rownum or _actions
   const sortableColumnIds = columns.map((c) => c.id);
 
@@ -113,7 +131,7 @@ export function DataTable({
 
     if (!fromColumn || !toColumn) return;
 
-    await reorderColumns(pageId, fromColumn.order, toColumn.order);
+    await reorderColumns(fromColumn.order, toColumn.order);
   }
 
   if (isLoading) {
@@ -137,9 +155,15 @@ export function DataTable({
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <div className="overflow-x-auto rounded-lg border border-(--color-border)">
+        <div
+          ref={parentRef}
+          className="max-h-52 overflow-auto rounded-lg border border-(--color-border)"
+        >
           <table className="w-full text-sm border-collapse">
-            <thead>
+            <thead
+              className="sticky top-0 z-20"
+              style={{ background: "var(--color-surface-2)" }}
+            >
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr
                   key={headerGroup.id}
@@ -189,48 +213,71 @@ export function DataTable({
             </thead>
 
             <tbody>
-              {table.getRowModel().rows.length === 0 ? (
+              {tableRows.length === 0 ? (
                 <tr>
                   <td
                     colSpan={tableColumns.length}
                     className="px-3 py-12 text-center"
                   >
-                    <p className="text-sm text-gray-400 mb-1">No rows yet</p>
-                    <p className="text-xs text-gray-300">
+                    <p className="text-sm text-(--color-text-muted) mb-1">
+                      No rows yet
+                    </p>
+                    <p className="text-xs text-(--color-text-faint)">
                       Click "Add row" below to get started
                     </p>
                   </td>
                 </tr>
               ) : (
-                table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={cn(
-                      "border-b border-(--color-border) last:border-b-0",
-                      "hover:bg-(--color-surface-2) transition-colors group",
-                    )}
-                  >
-                    {row.getVisibleCells().map((cell) => (
+                <>
+                  {paddingTop > 0 && (
+                    <tr aria-hidden="true">
                       <td
-                        key={cell.id}
-                        className={cn(
-                          "px-3 py-1.5 border-r border-(--color-border) last:border-r-0",
-                          cell.column.id === "_rownum" && "sticky left-0 z-10",
-                        )}
-                        style={
-                          cell.column.id === "_rownum"
-                            ? { background: "var(--color-surface)" }
-                            : {}
-                        }
+                        colSpan={tableColumns.length}
+                        style={{ height: paddingTop, padding: 0 }}
+                      />
+                    </tr>
+                  )}
+
+                  {virtualRows.map((virtualRow) => {
+                    const row = tableRows[virtualRow.index];
+                    return (
+                      <tr
+                        key={row.id}
+                        className="border-b border-(--color-border) last:border-b-0 hover:bg-(--color-surface-2) transition-colors group"
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))
+                        {row.getVisibleCells().map((cell) => (
+                          <td
+                            key={cell.id}
+                            className={cn(
+                              "px-3 py-1.5 border-r border-(--color-border) last:border-r-0",
+                              cell.column.id === "_rownum" &&
+                                "sticky left-0 z-10",
+                            )}
+                            style={
+                              cell.column.id === "_rownum"
+                                ? { background: "var(--color-surface)" }
+                                : undefined
+                            }
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+
+                  {paddingBottom > 0 && (
+                    <tr aria-hidden="true">
+                      <td
+                        colSpan={tableColumns.length}
+                        style={{ height: paddingBottom, padding: 0 }}
+                      />
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>
@@ -314,6 +361,7 @@ function RowDeleteButton({ rowId }: { rowId: string }) {
         "text-gray-300 hover:text-red-500 hover:bg-red-50",
         "opacity-0 group-hover:opacity-100 transition-all",
       )}
+      aria-label="Delete row"
     >
       <Trash2 className="w-3.5 h-3.5" />
     </button>

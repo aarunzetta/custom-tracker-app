@@ -70,6 +70,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
           "text-(--color-text-faint) hover:text-(--color-text-primary)",
           "transition-colors shadow-(--shadow-sm)",
         )}
+        aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
       >
         {isOpen ? (
           <ChevronLeft className="w-3 h-3" />
@@ -355,6 +356,8 @@ function PageItem({
               "opacity-0 group-hover:opacity-100 transition-opacity",
               showMenu && "opacity-100",
             )}
+            aria-label={`Actions for ${page.name}`}
+            aria-expanded={showMenu}
           >
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>

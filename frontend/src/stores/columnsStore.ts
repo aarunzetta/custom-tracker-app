@@ -33,11 +33,7 @@ type ColumnsStore = {
     data: Partial<Pick<Column, "name" | "options" | "order">>,
   ) => Promise<void>;
   deleteColumn: (id: string) => Promise<void>;
-  reorderColumns: (
-    pageId: string,
-    fromOrder: number,
-    toOrder: number,
-  ) => Promise<void>;
+  reorderColumns: (fromOrder: number, toOrder: number) => Promise<void>;
 };
 
 export const useColumnsStore = create<ColumnsStore>((set, get) => ({
@@ -103,7 +99,7 @@ export const useColumnsStore = create<ColumnsStore>((set, get) => ({
     }
   },
 
-  reorderColumns: async (pageId, fromOrder, toOrder) => {
+  reorderColumns: async (fromOrder, toOrder) => {
     const columns = [...get().columns];
     const moving = columns.find((c) => c.order === fromOrder);
     if (!moving) return;

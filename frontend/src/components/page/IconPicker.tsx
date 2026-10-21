@@ -72,6 +72,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
           "focus:outline-none focus:ring-2 focus:ring-gray-200",
         )}
         title="Change icon"
+        aria-label="Change page icon"
       >
         {value ?? "📄"}
       </button>

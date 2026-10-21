@@ -10,6 +10,7 @@ import {
 import { useColumnsStore } from "@/stores/columnsStore";
 import { useRowsStore } from "@/stores/rowsStore";
 import type { Widget } from "@/stores/widgetsStore";
+import { useMemo } from "react";
 import { safeTransformChartData } from "@/lib/chartData";
 
 type BarChartWidgetProps = {
@@ -17,10 +18,14 @@ type BarChartWidgetProps = {
 };
 
 export function BarChartWidget({ widget }: BarChartWidgetProps) {
-  const { columns } = useColumnsStore();
-  const { rows } = useRowsStore();
+  const columns = useColumnsStore((s) => s.columns);
+  const rows = useRowsStore((s) => s.rows);
+  const config = widget.config;
 
-  const data = safeTransformChartData({ columns, rows, config: widget.config });
+  const data = useMemo(
+    () => safeTransformChartData({ columns, rows, config }),
+    [columns, rows, config],
+  );
 
   if (data.length === 0) {
     return (

@@ -38,5 +38,11 @@ export function WidgetRenderer({ widget }: WidgetRendererProps) {
     }
   })();
 
-  return <ErrorBoundary fallback={fallback}>{chart}</ErrorBoundary>;
+  return (
+    <ErrorBoundary fallback={fallback}>
+      <div role="figure" aria-label={`${widget.title}, ${widget.type} chart`}>
+        {chart}
+      </div>
+    </ErrorBoundary>
+  );
 }
