@@ -10,7 +10,7 @@ import {
 import { useColumnsStore } from "@/stores/columnsStore";
 import { useRowsStore } from "@/stores/rowsStore";
 import type { Widget } from "@/stores/widgetsStore";
-import { transformChartData } from "@/lib/chartData";
+import { safeTransformChartData } from "@/lib/chartData";
 
 type BarChartWidgetProps = {
   widget: Widget;
@@ -20,11 +20,7 @@ export function BarChartWidget({ widget }: BarChartWidgetProps) {
   const { columns } = useColumnsStore();
   const { rows } = useRowsStore();
 
-  const data = transformChartData({
-    columns,
-    rows,
-    config: widget.config,
-  });
+  const data = safeTransformChartData({ columns, rows, config: widget.config });
 
   if (data.length === 0) {
     return (

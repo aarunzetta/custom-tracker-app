@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api } from "@/lib/api";
+import { notify } from "@/lib/errors";
 
 export type Page = {
   id: string;
@@ -20,7 +21,7 @@ type PagesStore = {
   deletePage: (id: string) => Promise<void>;
 };
 
-export const usePagesStore = create<PagesStore>((set) => ({
+export const usePagesStore = create<PagesStore>((set, get) => ({
   pages: [],
   isLoading: false,
 
@@ -29,30 +30,54 @@ export const usePagesStore = create<PagesStore>((set) => ({
     try {
       const res = await api.get("/pages");
       set({ pages: res.data });
+    } catch (error) {
+      notify.error(error);
     } finally {
       set({ isLoading: false });
     }
   },
 
-  createPage: async (name: string) => {
-    const res = await api.post("/pages", { name });
-    const newPage: Page = res.data;
-    // Add to local state immediately — no need to refetch
-    set((state) => ({ pages: [...state.pages, newPage] }));
-    return newPage;
+  createPage: async (name) => {
+    try {
+      const res = await api.post("/pages", { name });
+      const newPage: Page = res.data;
+      set((state) => ({ pages: [...state.pages, newPage] }));
+      return newPage;
+    } catch (error) {
+      notify.error(error);
+      throw error;
+    }
   },
 
   updatePage: async (id, data) => {
-    await api.patch(`/pages/${id}`, data);
+    // Save previous state for rollback
+    const previous = get().pages;
+    // Optimistic update
     set((state) => ({
       pages: state.pages.map((p) => (p.id === id ? { ...p, ...data } : p)),
     }));
+    try {
+      await api.patch(`/pages/${id}`, data);
+    } catch (error) {
+      // Rollback
+      set({ pages: previous });
+      notify.error(error);
+    }
   },
 
   deletePage: async (id) => {
-    await api.delete(`/pages/${id}`);
+    const previous = get().pages;
+    // Optimistic delete
     set((state) => ({
       pages: state.pages.filter((p) => p.id !== id),
     }));
+    try {
+      await api.delete(`/pages/${id}`);
+      notify.success("Page deleted");
+    } catch (error) {
+      // Rollback
+      set({ pages: previous });
+      notify.error(error);
+    }
   },
 }));

@@ -9,7 +9,7 @@ import {
 import { useColumnsStore } from "@/stores/columnsStore";
 import { useRowsStore } from "@/stores/rowsStore";
 import type { Widget } from "@/stores/widgetsStore";
-import { transformChartData } from "@/lib/chartData";
+import { safeTransformChartData } from "@/lib/chartData";
 
 // A palette of colors for the pie slices
 const COLORS = [
@@ -33,7 +33,7 @@ export function PieChartWidget({ widget }: PieChartWidgetProps) {
   const { columns } = useColumnsStore();
   const { rows } = useRowsStore();
 
-  const data = transformChartData({
+  const data = safeTransformChartData({
     columns,
     rows,
     config: widget.config,

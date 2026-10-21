@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api } from "@/lib/api";
+import { notify } from "@/lib/errors";
 
 export type ColumnType =
   | "TEXT"
@@ -48,44 +49,67 @@ export const useColumnsStore = create<ColumnsStore>((set, get) => ({
     try {
       const res = await api.get(`/pages/${pageId}/columns`);
       set({ columns: res.data });
+    } catch (error) {
+      notify.error(error);
     } finally {
       set({ isLoading: false });
     }
   },
 
   createColumn: async (pageId, data) => {
-    const res = await api.post(`/pages/${pageId}/columns`, data);
-    const newColumn: Column = res.data;
-    set((state) => ({
-      columns: [...state.columns, newColumn].sort((a, b) => a.order - b.order),
-    }));
-    return newColumn;
+    try {
+      const res = await api.post(`/pages/${pageId}/columns`, data);
+      const newColumn: Column = res.data;
+      set((state) => ({
+        columns: [...state.columns, newColumn].sort(
+          (a, b) => a.order - b.order,
+        ),
+      }));
+      notify.success(`Column "${newColumn.name}" added`);
+      return newColumn;
+    } catch (error) {
+      notify.error(error);
+      throw error;
+    }
   },
 
   updateColumn: async (id, data) => {
-    // Optimistic update
+    const previous = get().columns;
     set((state) => ({
       columns: state.columns.map((c) => (c.id === id ? { ...c, ...data } : c)),
     }));
-    await api.patch(`/columns/${id}`, data);
+    try {
+      await api.patch(`/columns/${id}`, data);
+    } catch (error) {
+      set({ columns: previous });
+      notify.error(error);
+    }
   },
 
   deleteColumn: async (id) => {
-    await api.delete(`/columns/${id}`);
+    const previous = get().columns;
+    const column = previous.find((c) => c.id === id);
     set((state) => ({
       columns: state.columns
         .filter((c) => c.id !== id)
         .map((c, index) => ({ ...c, order: index })),
     }));
+    try {
+      await api.delete(`/columns/${id}`);
+      notify.success(`Column "${column?.name}" deleted`);
+    } catch (error) {
+      set({ columns: previous });
+      notify.error(error);
+    }
   },
 
   reorderColumns: async (pageId, fromOrder, toOrder) => {
-    // Optimistic reorder in the UI
     const columns = [...get().columns];
     const moving = columns.find((c) => c.order === fromOrder);
     if (!moving) return;
 
-    // Shift other columns
+    const previous = get().columns;
+
     const reordered = columns
       .map((c) => {
         if (c.id === moving.id) return { ...c, order: toOrder };
@@ -102,7 +126,11 @@ export const useColumnsStore = create<ColumnsStore>((set, get) => ({
 
     set({ columns: reordered });
 
-    // Persist to backend
-    await api.patch(`/columns/${moving.id}`, { order: toOrder });
+    try {
+      await api.patch(`/columns/${moving.id}`, { order: toOrder });
+    } catch (error) {
+      set({ columns: previous });
+      notify.error(error);
+    }
   },
 }));

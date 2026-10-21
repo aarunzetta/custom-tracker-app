@@ -13,6 +13,16 @@ type TransformOptions = {
   config: WidgetConfig;
 };
 
+export function safeTransformChartData(
+  options: TransformOptions,
+): ChartDataPoint[] {
+  try {
+    return transformChartData(options);
+  } catch {
+    return [];
+  }
+}
+
 export function transformChartData({
   columns,
   rows,
