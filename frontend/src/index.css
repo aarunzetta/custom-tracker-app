@@ -11,8 +11,8 @@
 
     --color-text-primary: #111827;
     --color-text-secondary: #374151;
-    --color-text-muted: #6b7280;
-    --color-text-faint: #9ca3af;
+    --color-text-muted: #4b5563;
+    --color-text-faint: #6b7280;
 
     --color-accent: #111827;
     --color-accent-hover: #374151;
@@ -47,6 +47,11 @@
 
     /* Typography */
     --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+    :focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
   }
 
   /* Dark mode tokens */

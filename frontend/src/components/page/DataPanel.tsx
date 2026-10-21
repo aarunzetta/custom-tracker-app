@@ -68,6 +68,7 @@ export function DataPanel({ isOpen, onClose, pageId }: DataPanelProps) {
               onClick={onClose}
               className="w-6 h-6 flex items-center justify-center rounded hover:bg-(--color-surface-2) transition-colors"
               style={{ color: "var(--color-text-faint)" }}
+              aria-label="Close data panel"
             >
               <X className="w-4 h-4" />
             </button>

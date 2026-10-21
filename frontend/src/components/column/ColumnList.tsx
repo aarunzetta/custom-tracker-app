@@ -85,6 +85,7 @@ function ColumnListItem({ column }: ColumnListItemProps) {
             "text-gray-300 hover:text-red-500 hover:bg-red-50",
             "opacity-0 group-hover:opacity-100 transition-all",
           )}
+          aria-label={`Delete column ${column.name}`}
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>

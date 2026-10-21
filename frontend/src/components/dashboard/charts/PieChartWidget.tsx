@@ -9,7 +9,8 @@ import {
 import { useColumnsStore } from "@/stores/columnsStore";
 import { useRowsStore } from "@/stores/rowsStore";
 import type { Widget } from "@/stores/widgetsStore";
-import { transformChartData } from "@/lib/chartData";
+import { useMemo } from "react";
+import { safeTransformChartData } from "@/lib/chartData";
 
 // A palette of colors for the pie slices
 const COLORS = [
@@ -30,14 +31,18 @@ type PieChartWidgetProps = {
 };
 
 export function PieChartWidget({ widget }: PieChartWidgetProps) {
-  const { columns } = useColumnsStore();
-  const { rows } = useRowsStore();
+  const columns = useColumnsStore((s) => s.columns);
+  const rows = useRowsStore((s) => s.rows);
+  const config = widget.config;
 
-  const data = transformChartData({
-    columns,
-    rows,
-    config: widget.config,
-  });
+  const data = useMemo(
+    () => safeTransformChartData({ columns, rows, config }),
+    [columns, rows, config],
+  );
+  const total = useMemo(
+    () => data.reduce((sum, d) => sum + d.value, 0),
+    [data],
+  );
 
   if (data.length === 0) {
     return (
@@ -46,9 +51,6 @@ export function PieChartWidget({ widget }: PieChartWidgetProps) {
       </div>
     );
   }
-
-  // Calculate total for percentage labels in tooltip
-  const total = data.reduce((sum, d) => sum + d.value, 0);
 
   return (
     <ResponsiveContainer width="100%" height={200}>
@@ -76,10 +78,11 @@ export function PieChartWidget({ widget }: PieChartWidgetProps) {
             color: "var(--color-text-primary)",
             boxShadow: "var(--shadow-md)",
           }}
-          formatter={(value: number, name: string) => [
-            `${value} (${Math.round((value / total) * 100)}%)`,
-            name,
-          ]}
+          formatter={(value, name) => {
+            const num = Number(value ?? 0);
+            const percent = total > 0 ? Math.round((num / total) * 100) : 0;
+            return [`${num} (${percent}%)`, String(name ?? "")];
+          }}
         />
         <Legend
           iconType="circle"

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api } from "@/lib/api";
+import { notify } from "@/lib/errors";
 
 export type WidgetType = "bar" | "line" | "kpi" | "pie";
 export type WidgetSize = "small" | "large";
@@ -40,7 +41,7 @@ type WidgetsStore = {
   deleteWidget: (id: string) => Promise<void>;
 };
 
-export const useWidgetsStore = create<WidgetsStore>((set) => ({
+export const useWidgetsStore = create<WidgetsStore>((set, get) => ({
   widgets: [],
   isLoading: false,
 
@@ -49,31 +50,51 @@ export const useWidgetsStore = create<WidgetsStore>((set) => ({
     try {
       const res = await api.get(`/pages/${pageId}/widgets`);
       set({ widgets: res.data });
+    } catch (error) {
+      notify.error(error);
     } finally {
       set({ isLoading: false });
     }
   },
 
   createWidget: async (pageId, data) => {
-    const res = await api.post(`/pages/${pageId}/widgets`, data);
-    const newWidget: Widget = res.data;
-    set((state) => ({
-      widgets: [...state.widgets, newWidget],
-    }));
-    return newWidget;
+    try {
+      const res = await api.post(`/pages/${pageId}/widgets`, data);
+      const newWidget: Widget = res.data;
+      set((state) => ({ widgets: [...state.widgets, newWidget] }));
+      notify.success(`Chart "${newWidget.title}" created`);
+      return newWidget;
+    } catch (error) {
+      notify.error(error);
+      throw error;
+    }
   },
 
   updateWidget: async (id, data) => {
+    const previous = get().widgets;
     set((state) => ({
       widgets: state.widgets.map((w) => (w.id === id ? { ...w, ...data } : w)),
     }));
-    await api.patch(`/widgets/${id}`, data);
+    try {
+      await api.patch(`/widgets/${id}`, data);
+    } catch (error) {
+      set({ widgets: previous });
+      notify.error(error);
+    }
   },
 
   deleteWidget: async (id) => {
+    const previous = get().widgets;
+    const widget = previous.find((w) => w.id === id);
     set((state) => ({
       widgets: state.widgets.filter((w) => w.id !== id),
     }));
-    await api.delete(`/widgets/${id}`);
+    try {
+      await api.delete(`/widgets/${id}`);
+      notify.success(`Chart "${widget?.title}" deleted`);
+    } catch (error) {
+      set({ widgets: previous });
+      notify.error(error);
+    }
   },
 }));

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePagesStore, type Page } from "@/stores/pagesStore";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 type SidebarProps = {
   isOpen: boolean;
@@ -69,6 +70,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
           "text-(--color-text-faint) hover:text-(--color-text-primary)",
           "transition-colors shadow-(--shadow-sm)",
         )}
+        aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
       >
         {isOpen ? (
           <ChevronLeft className="w-3 h-3" />
@@ -171,7 +173,7 @@ function SidebarItem({
   isActive,
   onClick,
 }: SidebarItemProps) {
-  return (
+  const button = (
     <motion.button
       onClick={onClick}
       whileTap={{ scale: 0.97 }}
@@ -183,14 +185,11 @@ function SidebarItem({
           : "text-(--color-text-muted) hover:text-(--color-text-primary)",
         !isOpen && "justify-center",
       )}
-      title={!isOpen ? label : undefined}
     >
-      {/* Active indicator */}
       {isActive && (
         <motion.div
           layoutId="sidebar-active"
-          className="absolute inset-0 rounded-lg"
-          style={{ background: "var(--color-surface-2)" }}
+          className="absolute inset-0 rounded-lg bg-(--color-surface-2)"
           transition={{ duration: 0.15, ease: "easeOut" }}
         />
       )}
@@ -198,6 +197,16 @@ function SidebarItem({
       {isOpen && <span className="relative z-10 truncate">{label}</span>}
     </motion.button>
   );
+
+  if (!isOpen) {
+    return (
+      <Tooltip content={label} side="right">
+        {button}
+      </Tooltip>
+    );
+  }
+
+  return button;
 }
 
 // ─── Page item with rename + delete ─────────────────────────────────────────
@@ -347,6 +356,8 @@ function PageItem({
               "opacity-0 group-hover:opacity-100 transition-opacity",
               showMenu && "opacity-100",
             )}
+            aria-label={`Actions for ${page.name}`}
+            aria-expanded={showMenu}
           >
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>

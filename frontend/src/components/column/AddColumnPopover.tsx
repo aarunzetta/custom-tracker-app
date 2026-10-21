@@ -136,6 +136,7 @@ export function AddColumnPopover({ pageId }: AddColumnPopoverProps) {
                 <button
                   onClick={() => setStep("pick-type")}
                   className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400"
+                  aria-label="Back"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
@@ -149,6 +150,7 @@ export function AddColumnPopover({ pageId }: AddColumnPopoverProps) {
             <button
               onClick={handleClose}
               className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400"
+              aria-label="Close"
             >
               <X className="w-3.5 h-3.5" />
             </button>

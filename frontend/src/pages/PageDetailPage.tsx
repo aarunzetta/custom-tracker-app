@@ -10,13 +10,18 @@ import { IconPicker } from "@/components/page/IconPicker";
 import { DataPanelToggle } from "@/components/page/DataPanelToggle";
 import { DataPanel } from "@/components/page/DataPanel";
 import { Dashboard } from "@/components/dashboard/Dashboard";
+import { HintBanner } from "@/components/page/HintBanner";
+import { PageTransition } from "@/components/layout/PageTransition";
 
 export function PageDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { page, isLoading, error, updatePage } = usePage(id);
+  const { columns } = useColumnsStore();
+  const { rows } = useRowsStore();
+  const { widgets } = useWidgetsStore();
   const [dataPanelOpen, setDataPanelOpen] = useState(false);
+  const [addWidgetOpen, setAddWidgetOpen] = useState(false);
 
-  // Clear all page data when navigating away
   useEffect(() => {
     return () => {
       useColumnsStore.setState({ columns: [] });
@@ -28,7 +33,10 @@ export function PageDetailPage() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+        <Loader2
+          className="w-5 h-5 animate-spin"
+          style={{ color: "var(--color-text-faint)" }}
+        />
       </div>
     );
   }
@@ -37,49 +45,74 @@ export function PageDetailPage() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-          <p className="text-sm text-gray-500">Page not found</p>
+          <AlertCircle
+            className="w-8 h-8 mx-auto mb-2"
+            style={{ color: "var(--color-border-strong)" }}
+          />
+          <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+            Page not found
+          </p>
         </div>
       </div>
     );
   }
 
+  // Show hint when user has data but no charts
+  const showHint =
+    columns.length > 0 && rows.length > 0 && widgets.length === 0;
+
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Page header */}
-      <div className="px-8 py-5 border-b border-gray-200 bg-white shrink-0">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <IconPicker
-              value={page.icon}
-              onChange={(icon) => updatePage({ icon })}
-            />
-            <EditableTitle
-              value={page.name}
-              onChange={(name) => updatePage({ name })}
-            />
-          </div>
-          <div className="flex items-center gap-2 shrink-0 pt-1">
-            <DataPanelToggle
-              isOpen={dataPanelOpen}
-              onToggle={() => setDataPanelOpen(!dataPanelOpen)}
-            />
+    <PageTransition>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Page header */}
+        <div
+          className="px-8 py-5 border-b shrink-0"
+          style={{
+            borderColor: "var(--color-border)",
+            background: "var(--color-surface)",
+          }}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <IconPicker
+                value={page.icon}
+                onChange={(icon) => updatePage({ icon })}
+              />
+              <EditableTitle
+                value={page.name}
+                onChange={(name) => updatePage({ name })}
+              />
+            </div>
+            <div className="flex items-center gap-2 shrink-0 pt-1">
+              <DataPanelToggle
+                isOpen={dataPanelOpen}
+                onToggle={() => setDataPanelOpen(!dataPanelOpen)}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Dashboard — takes up all available space above the data panel */}
-        <Dashboard pageId={page.id} onOpenData={() => setDataPanelOpen(true)} />
+        {/* Main content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Hint banner */}
+          {showHint && <HintBanner onAddChart={() => setAddWidgetOpen(true)} />}
 
-        {/* Data panel — slides up from bottom */}
-        <DataPanel
-          isOpen={dataPanelOpen}
-          onClose={() => setDataPanelOpen(false)}
-          pageId={page.id}
-        />
+          {/* Dashboard */}
+          <Dashboard
+            pageId={page.id}
+            onOpenData={() => setDataPanelOpen(true)}
+            addWidgetOpen={addWidgetOpen}
+            onAddWidgetOpenChange={setAddWidgetOpen}
+          />
+
+          {/* Data panel */}
+          <DataPanel
+            isOpen={dataPanelOpen}
+            onClose={() => setDataPanelOpen(false)}
+            pageId={page.id}
+          />
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

@@ -7,20 +7,40 @@ import { DashboardEmpty } from "./DashboardEmpty";
 import { AddWidgetButton } from "./AddWidgetButton";
 import { WidgetConfigModal } from "./WidgetConfigModal";
 import { DashboardSkeleton } from "@/components/ui/Skeleton";
+import { PageEmptyState } from "@/components/page/PageEmptyState";
 
 type DashboardProps = {
   pageId: string;
   onOpenData: () => void;
+  addWidgetOpen?: boolean;
+  onAddWidgetOpenChange?: (open: boolean) => void;
 };
 
-export function Dashboard({ pageId, onOpenData }: DashboardProps) {
+export function Dashboard({
+  pageId,
+  onOpenData,
+  addWidgetOpen = false,
+  onAddWidgetOpenChange,
+}: DashboardProps) {
   const { widgets, isLoading, fetchWidgets } = useWidgetsStore();
   const { columns, fetchColumns } = useColumnsStore();
   const { rows, fetchRows } = useRowsStore();
-  const [addWidgetOpen, setAddWidgetOpen] = useState(false);
+
+  // Use external open state if provided, otherwise internal
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isAddOpen = onAddWidgetOpenChange ? addWidgetOpen : internalOpen;
+
   const [configuringWidget, setConfiguringWidget] = useState<Widget | null>(
     null,
   );
+
+  function setIsAddOpen(val: boolean) {
+    if (onAddWidgetOpenChange) {
+      onAddWidgetOpenChange(val);
+    } else {
+      setInternalOpen(val);
+    }
+  }
 
   // Initial fetch
   useEffect(() => {
@@ -43,19 +63,23 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
     );
   }
 
+  if (!isLoading && columns.length === 0) {
+    return <PageEmptyState onOpenData={onOpenData} />;
+  }
+
   if (widgets.length === 0) {
     return (
       <div className="flex-1 flex flex-col">
         <DashboardEmpty
           hasColumns={columns.length > 0}
-          onAddWidget={() => setAddWidgetOpen(true)}
+          onAddWidget={() => setIsAddOpen(true)}
           onOpenData={onOpenData}
         />
         <div className="absolute">
           <AddWidgetButton
             pageId={pageId}
-            open={addWidgetOpen}
-            onOpenChange={setAddWidgetOpen}
+            open={isAddOpen}
+            onOpenChange={setIsAddOpen}
           />
         </div>
       </div>
@@ -71,8 +95,8 @@ export function Dashboard({ pageId, onOpenData }: DashboardProps) {
         </p>
         <AddWidgetButton
           pageId={pageId}
-          open={addWidgetOpen}
-          onOpenChange={setAddWidgetOpen}
+          open={isAddOpen}
+          onOpenChange={setIsAddOpen}
         />
       </div>
 
