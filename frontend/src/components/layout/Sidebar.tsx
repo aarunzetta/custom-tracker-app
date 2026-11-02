@@ -50,7 +50,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       {/* Logo */}
       <div className="flex items-center h-14 px-4 border-b border-(--color-border) shrink-0">
         <div className="flex items-center gap-2 overflow-hidden">
-          <div className="w-6 h-6 rounded-md bg-gray-900 shrink-0" />
+          <img src="/tracker-logo.svg" alt="" className="w-6 h-6 shrink-0" />
           {isOpen && (
             <span className="font-semibold text-gray-900 truncate">
               Tracker
