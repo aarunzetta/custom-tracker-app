@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./docs/tracker-logo.svg" alt="Tracker" width="280" />
+</p>
+
 # Tracker App
 
 A Notion-style tracker where every topic gets its own page, every page has a customizable data table, and the page itself is a live analytics dashboard built from that table.
